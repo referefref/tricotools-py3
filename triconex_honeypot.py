@@ -5,6 +5,7 @@ date    : April, 4th 2018
 author  : Alessandro Di Pinto (@adipinto)
 author  : Andrea Arteaga
 author  : Younes Dragoni (@ydragoni)
+author  : James Brine (@referefref)
 
 contact : secresearch [ @ ] nozominetworks [ . ] com
 '''
@@ -18,8 +19,8 @@ import argparse
 try:
     import crcmod
 except ImportError:
-    print "[-] Please install the module 'crcmod' (eg, pip install crcmod)"
-    exit(1)
+    print("[-] Please install the module 'crcmod' (eg, pip install crcmod)")
+    sys.exit(1)
 
 def build_slot(leds0, leds1, model, color):
     slotfmt = '<' + 32*'B'
@@ -48,9 +49,9 @@ def build_packet(triconId, funccode, seq, data):
     # Compute checksum
     checksum = datalength
     for c in subheader:
-        checksum += ord(c)
+        checksum += c
     for c in data:
-        checksum += ord(c)
+        checksum += c
 
     # Header and subheader with checksum
     header  = struct.pack('<BBH', 5, triconId, datalength)
@@ -80,7 +81,7 @@ def build_chassis_status_response(triconId=0, seq=0, node=2, projname='FIRSTPROJ
             projname[6],
             projname[7],
             projname[8],
-            '\0',
+            b'\0',
             int(time.time()))
 
     # Memory segment
@@ -104,38 +105,6 @@ def build_chassis_status_response(triconId=0, seq=0, node=2, projname='FIRSTPROJ
     return build_packet(triconId, 119, seq, data)
 
 def build_CP_status_response(triconId=0, seq=0):
-    '''
-    # Collapsed structure
-    data = struct.pack('<' + 186*'B',
-            0x00, 0x01, 0x00, 0x00, 0x0d, 0x00, 0x01, 0x01,
-            0x01, 0x00, 0x00, 0x50, 0x80, 0x00, 0x00, 0x00,
-            0x80, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00,
-            0x60, 0x00, 0x00, 0x50, 0xfe, 0x00, 0xff, 0xaf,
-            0xff, 0x00, 0x00, 0x20, 0x00, 0x20, 0x00, 0x20,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x14, 0x1b,
-            0x00, 0x00, 0xc8, 0x00, 0xc8, 0x00, 0xba, 0x00,
-            0x5c, 0x98, 0x00, 0x00, 0x35, 0x00, 0x4f, 0xb6,
-            0xe1, 0x5a, 0x45, 0x4d, 0x50, 0x54, 0x59, 0x00,
-            0xad, 0x05, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x12, 0x00,
-            0x02, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0xf0, 0x0f, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x4d, 0x61, 0x6e, 0x61,
-            0x67, 0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00
-            )
-    return build_packet(triconId, 108, seq, data)
-    '''
-
-
     data = struct.pack('<HBBBBBBB', 1,
             0x0, # loadIn
             0x0, # modIn
@@ -167,7 +136,7 @@ def build_CP_status_response(triconId=0, seq=0):
 
     data += struct.pack('<HH', 4, 3) # Minor, major
     data += struct.pack('<I', time.time()) # Timestamp
-    data += struct.pack('<cccccccccc', 'E', 'C', 'C', 'E', 'C', 'C', 'A', 'H', 'H', '\0')
+    data += struct.pack('<cccccccccc', 'E', 'C', 'C', 'E', 'C', 'C', 'A', 'H', 'H', b'\0')
 
     data += struct.pack('<BBBBBBBB', 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
     data += struct.pack('<BBBBBBBB', 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
@@ -200,30 +169,30 @@ def debug(fc, printc, *args, **kwargs):
                + (32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 0) \
                + (2, 0)
     else:
-        print 'Function code', fc, 'not supported'
+        print('Function code', fc, 'not supported')
 
     if printc:
-        print '{\n ',
+        print('{\n ', end='')
         for i, c in enumerate(packet):
             end = ',\n ' if i%16 == 15 else (',' if i != len(packet)-1 else '')
-            print '0x%02x'%ord(c) + end,
+            print('0x%02x'%c + end, end='')
         if len(packet)%16 != 15:
-            print
-        print '}'
+            print()
+        print('}')
     else:
         i = 0
         for l in lines:
             iend = i+l
             while i < iend:
-                print '%02x' % ord(packet[i]),
+                print('%02x' % packet[i], end=' ')
                 i += 1
-            print
+            print()
 
         while i < len(packet):
-            print '%02x' % ord(packet[i]),
+            print('%02x' % packet[i], end=' ')
             i += 1
-        print
-        print len(packet), 'bytes'
+        print()
+        print(len(packet), 'bytes')
 
 def f_crc16(data):
     cf = crcmod.mkCrcFun(0x18005, rev=True, initCrc=0x0000, xorOut=0)
@@ -232,17 +201,17 @@ def f_crc16(data):
 def checksum(data, init=0):
     summ = init
     for i in data:
-        summ += ord(i)
+        summ += i
     return summ & 0xFFFF
 
 def udp_send(data, addr, port):
     sock.sendto(data, (addr, port))
 
-def build_tricon_attached(triconId=0, seq=0, string='\x03\x00\x33\x0a\x04\x00'):
+def build_tricon_attached(triconId=0, seq=0, string=b'\x03\x00\x33\x0a\x04\x00'):
     return build_packet(triconId, 0x6a, seq, string)
 
 if __name__ == "__main__":
-    suppmods = slotsdesc.keys()
+    suppmods = list(slotsdesc.keys())
     parser = argparse.ArgumentParser(
         description="Triconex Honeypot emulating arbitrary modules (PoC)\nSupported modules: %s\n\nAuthors:\n\tAlessandro Di Pinto (@adipinto)\n\tAndrea Arteaga\n\tYounes Dragoni (@br4zzor)" %', '.join(suppmods),
         formatter_class=argparse.RawDescriptionHelpFormatter
@@ -259,20 +228,20 @@ if __name__ == "__main__":
     UDP_IP = args.honeyip
     UDP_PORT = args.honeyport
 
-    print "[*] Binding the honeypot to the address %s:%d" % (UDP_IP, UDP_PORT)
+    print("[*] Binding the honeypot to the address %s:%d" % (UDP_IP, UDP_PORT))
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind((UDP_IP, UDP_PORT))
     except socket.error:
-        print "[-] Error binding to the specified address"
-        exit(2)
+        print("[-] Error binding to the specified address")
+        sys.exit(2)
 
     # Print info about modules
-    print "[*] Slot 1 module set to: %s" % args.slot1
-    print "[*] Slot 2 module set to: %s" % args.slot2
-    print "[*] Slot 3 module set to: %s" % args.slot3
-    print "[*] Slot 4 module set to: %s" % args.slot4
+    print("[*] Slot 1 module set to: %s" % args.slot1)
+    print("[*] Slot 2 module set to: %s" % args.slot2)
+    print("[*] Slot 3 module set to: %s" % args.slot3)
+    print("[*] Slot 4 module set to: %s" % args.slot4)
 
     cf = crcmod.mkCrcFun(0x18005, rev=True, initCrc=0, xorOut=0)
 
@@ -286,23 +255,23 @@ if __name__ == "__main__":
 
             # CONNECT REQUEST
             if mcode == 0x1:
-                print "[*] CONNECT REQUEST"
+                print("[*] CONNECT REQUEST")
                 # CONNECT REPLY
-                udp_send("\x02\x00\x00\x00\x01\xb8", UDP_REMOTE, dport)
+                udp_send(b"\x02\x00\x00\x00\x01\xb8", UDP_REMOTE, dport)
 
             # COMMAND REPLY
             elif mcode == 0x5:
                 # Get the function code
                 fcode, pseq = struct.unpack("<BB", data[6:8])
                 if fcode == 0xD:
-                    print "[*] ATTACH REQUEST"
+                    print("[*] ATTACH REQUEST")
                     udp_send(build_tricon_attached(), UDP_REMOTE, dport)
                 elif fcode == 0x13:
                     #time.sleep(5)
-                    print "[*] GET CP STATUS"
+                    print("[*] GET CP STATUS")
                     udp_send(build_CP_status_response(seq=pseq), UDP_REMOTE, dport)
                 elif fcode == 0x18:
-                    print "[*] GET CHASSIS STATUS"
+                    print("[*] GET CHASSIS STATUS")
                     udp_send(
                         build_chassis_status_response(
                             seq=pseq,
@@ -314,7 +283,7 @@ if __name__ == "__main__":
                         dport
                     )
                 else:
-                    print "[-] UNKNOWN: %s" % hex(fcode)
+                    print("[-] UNKNOWN: %s" % hex(fcode))
     except KeyboardInterrupt:
-        print "[*] Execution interrupted by the user"
-    exit(0)
+        print("[*] Execution interrupted by the user")
+    sys.exit(0)
